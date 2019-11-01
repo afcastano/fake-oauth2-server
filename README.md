@@ -31,3 +31,9 @@ List of environment variables:
 |`PERMITTED_REDIRECT_URLS`|`http://localhost:8181/auth/login`|comma-separated list of permitted [redirection endpoints](https://tools.ietf.org/html/rfc6749#section-3.1.2)|
 
 All those environment variables are defined in `.env` file with some examples. To use them, set them with your environment values and run `$node server.js` or `$npm start`. Those variables are then magically put in the process environment variables using [dotenv](https://www.npmjs.com/package/dotenv).
+
+
+
+Sequence:
+
+1- AUTH_REQUEST_PATH. Params:   redirect_uri, state, client_id, response_type

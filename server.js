@@ -14,6 +14,7 @@ console.log("\texpected Client ID: " + app.EXPECTED_CLIENT_ID);
 console.log("\texpected Client Secret: " + app.EXPECTED_CLIENT_SECRET);
 console.log("\tauthorization endpoint: " + app.AUTH_REQUEST_PATH);
 console.log("\taccess token endpoint: " + app.ACCESS_TOKEN_REQUEST_PATH);
+console.log("\tinfo url:" + app.USERINFO_REQUEST_URL);
 console.log("\tredirect URLs: " + app.permittedRedirectURLs());
 
 process.on("SIGTERM", function() {

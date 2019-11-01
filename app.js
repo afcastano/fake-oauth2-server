@@ -18,7 +18,7 @@ const EXPECTED_CLIENT_ID = process.env.EXPECTED_CLIENT_ID || "dummy-client-id";
 const EXPECTED_CLIENT_SECRET = process.env.EXPECTED_CLIENT_SECRET || "dummy-client-secret";
 const AUTH_REQUEST_PATH = process.env.AUTH_REQUEST_PATH || "/o/oauth2/v2/auth";
 const ACCESS_TOKEN_REQUEST_PATH = process.env.ACCESS_TOKEN_REQUEST_PATH || "/oauth2/v4/token";
-const USERINFO_REQUEST_URL = process.env.TOKENINFO_REQUEST_URL || "/oauth2/v3/userinfo";
+const USERINFO_REQUEST_URL = process.env.USERINFO_REQUEST_URL || "/oauth2/v3/userinfo";
 const TOKENINFO_REQUEST_URL = process.env.TOKENINFO_REQUEST_URL || "/oauth2/v3/tokeninfo";
 const PERMITTED_REDIRECT_URLS = process.env.PERMITTED_REDIRECT_URLS ? process.env.PERMITTED_REDIRECT_URLS.split(",") : ["http://localhost:8181/auth/login"];
 
@@ -95,6 +95,7 @@ function validateAuthorizationHeader(header, res) {
 }
 
 function validateAccessTokenRequest(req, res) {
+  console.log("Validate access token");
   let success = true, msg;
   if (req.body.grant_type !== "authorization_code" && req.body.grant_type !== "refresh_token") {
     success = false;
@@ -114,24 +115,25 @@ function validateAccessTokenRequest(req, res) {
   //   success = false;
   //   msg = errorMsg("Authorization header", req.headers["authorization"], "Basic ZHVtbXktY2xpZW50LWlkOmR1bW15LWNsaWVudC1zZWNyZXQ=");
   // }
-  if (!validateClientId(req.body.client_id, res)) {
-    success = false;
-  }
-  if (req.body.client_secret !== EXPECTED_CLIENT_SECRET) {
-    success = false;
-    msg = errorMsg("client_secret", EXPECTED_CLIENT_SECRET, req.body.client_secret);
-  }
-  if (req.session.redirect_uri !== req.body.redirect_uri) {
-    success = false;
-    msg = errorMsg("redirect_uri", req.session.redirect_uri, req.body.redirect_uri);
-  }
-  if (!success) {
-    const params = {};
-    if (msg) {
-      params["X-Debug"] = msg;
-    }
-    res.writeHead(401, params);
-  }
+  // if (!validateClientId(req.body.client_id, res)) {
+  //   success = false;
+  //   msg = errorMsg("client_id", EXPECTED_CLIENT_ID, req.body.client_id);
+  // } else if (req.body.client_secret !== EXPECTED_CLIENT_SECRET) {
+  //   success = false;
+  //   msg = errorMsg("client_secret", EXPECTED_CLIENT_SECRET, req.body.client_secret);
+  // } else if (req.session.redirect_uri !== req.body.redirect_uri) {
+  //   success = false;
+  //   msg = errorMsg("redirect_uri", req.session.redirect_uri, req.body.redirect_uri);
+  // }
+  // if (!success) {
+  //   console.log("validateAccessTokenRequest  unsuccessful");
+  //   const params = {};
+  //   if (msg) {
+  //     console.log("Debug msg " + msg);
+  //     params["X-Debug"] = msg;
+  //   }
+  //   res.writeHead(401, params);
+  // }
   return success;
 }
 
@@ -170,6 +172,8 @@ app.use(session({
 }))
 
 function authRequestHandler(req, res) {
+  console.log("Auth request handler: " + JSON.stringify(req.query));
+  console.log("Auth request handler header: " + JSON.stringify(req.headers));
   if (validateAuthRequest(req, res)) {
     req.session.redirect_uri = req.query.redirect_uri;
     if (req.query.state) {
@@ -179,7 +183,7 @@ function authRequestHandler(req, res) {
       query: req.query
     }));
   } else {
-
+    console.log('authRequestHandler Unsuccesful');
   }
   res.end();
 }
@@ -200,6 +204,8 @@ app.get("/login-as", (req, res) => {
 });
 
 app.post(ACCESS_TOKEN_REQUEST_PATH, (req, res) => {
+  console.log("Access token request: " + JSON.stringify(req.body));
+  console.log("Access token request headers: " + JSON.stringify(req.headers));
   if (validateAccessTokenRequest(req, res)) {
     let code = null;
     if (req.body.grant_type === "refresh_token") {
@@ -220,6 +226,7 @@ app.post(ACCESS_TOKEN_REQUEST_PATH, (req, res) => {
 });
 
 app.get(USERINFO_REQUEST_URL, (req, res) => {
+  console.log("User info request " + JSON.stringify(req.headers));
   const token_info = authHeader2personData[req.headers["authorization"]];
   if (token_info !== undefined) {
     console.log("userinfo response", token_info);
@@ -231,6 +238,7 @@ app.get(USERINFO_REQUEST_URL, (req, res) => {
 });
 
 app.get(TOKENINFO_REQUEST_URL, (req, res) => {
+  console.log("Token info request " + JSON.stringify(req.query));
   if (req.query.id_token == null) {
       res.status(400)
       res.send("missing id_token query parameter");
@@ -259,5 +267,6 @@ module.exports = {
   AUTH_REQUEST_PATH : AUTH_REQUEST_PATH,
   ACCESS_TOKEN_REQUEST_PATH : ACCESS_TOKEN_REQUEST_PATH,
   PERMITTED_REDIRECT_URLS : PERMITTED_REDIRECT_URLS,
-  permittedRedirectURLs: permittedRedirectURLs
+  permittedRedirectURLs: permittedRedirectURLs,
+  USERINFO_REQUEST_URL: USERINFO_REQUEST_URL
 };
